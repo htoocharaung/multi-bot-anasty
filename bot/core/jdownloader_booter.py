@@ -110,10 +110,23 @@ class JDownloader(MyJdApi):
             await rmtree("/JDownloader/tmp")
         cmd = "java -Dsun.jnu.encoding=UTF-8 -Dfile.encoding=UTF-8 -Djava.awt.headless=true -jar /JDownloader/JDownloader.jar"
         self.is_connected = True
+        self._install_event_scripter()
         _, __, code = await cmd_exec(cmd, shell=True)
         self.is_connected = False
         if code != -9:
             await self.boot()
 
+    @new_task
+    async def _install_event_scripter(self):
+        from asyncio import sleep
+        for _ in range(120):
+            try:
+                if await self.device.ping():
+                    await self.device.extensions.install("org.jdownloader.extensions.eventscripter.EventScripterExtension")
+                    LOGGER.info("Event Scripter successfully pre-installed via MyJD API!")
+                    break
+            except Exception:
+                pass
+            await sleep(5)
 
 jdownloader = JDownloader()
