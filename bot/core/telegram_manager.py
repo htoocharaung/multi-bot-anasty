@@ -12,6 +12,7 @@ class TgClient:
     user = None
     NAME = ""
     ID = 0
+    extra_bots = []
     IS_PREMIUM_USER = False
     MAX_SPLIT_SIZE = 2097152000
 
@@ -35,6 +36,28 @@ class TgClient:
         )
         await cls.bot.start()
         cls.NAME = cls.bot.me.username
+        
+        cls.extra_bots = []
+        for i, token in enumerate(Config.EXTRA_BOT_TOKENS):
+            b_id = token.split(":", 1)[0]
+            b_client = Client(
+                b_id,
+                Config.TELEGRAM_API,
+                Config.TELEGRAM_HASH,
+                proxy=Config.TG_PROXY,
+                bot_token=token,
+                workdir="/app",
+                parse_mode=enums.ParseMode.HTML,
+                max_concurrent_transmissions=10,
+                max_message_cache_size=15000,
+                max_topic_cache_size=15000,
+                sleep_threshold=0,
+                link_preview_options=LinkPreviewOptions(is_disabled=True),
+            )
+            await b_client.start()
+            cls.extra_bots.append(b_client)
+            LOGGER.info(f"Started extra bot {i+1} from EXTRA_BOT_TOKENS")
+
 
     @classmethod
     async def start_user(cls):
@@ -71,6 +94,8 @@ class TgClient:
                 await cls.bot.stop()
             if cls.user:
                 await cls.user.stop()
+            for b in cls.extra_bots:
+                await b.stop()
             LOGGER.info("Client(s) stopped")
 
     @classmethod
@@ -79,4 +104,6 @@ class TgClient:
             await cls.bot.restart()
             if cls.user:
                 await cls.user.restart()
+            for b in cls.extra_bots:
+                await b.restart()
             LOGGER.info("Client(s) restarted")

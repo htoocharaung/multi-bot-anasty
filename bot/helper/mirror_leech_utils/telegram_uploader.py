@@ -65,6 +65,7 @@ class TelegramUploader:
         self._error = ""
         self._base_msg = None
         self._files_links = False
+        self._bot_index = 0
 
     async def _upload_progress(self, current, _):
         if self._listener.is_cancelled:
@@ -72,6 +73,8 @@ class TelegramUploader:
                 TgClient.user.stop_transmission()
             else:
                 self._listener.client.stop_transmission()
+                for b in TgClient.extra_bots:
+                    b.stop_transmission()
         chunk_size = current - self._last_uploaded
         self._last_uploaded = current
         self._processed_bytes += chunk_size
@@ -370,6 +373,14 @@ class TelegramUploader:
             self._thumb = None
         thumb = self._thumb
         self._is_corrupted = False
+        
+        if self._user_session:
+            current_client = TgClient.user
+        else:
+            bots = [self._listener.client] + TgClient.extra_bots
+            current_client = bots[self._bot_index % len(bots)]
+            self._bot_index += 1
+            
         try:
             is_video, is_audio, is_image = await get_document_type(self._up_path)
 
@@ -396,7 +407,9 @@ class TelegramUploader:
                     return
                 if thumb == "none":
                     thumb = None
-                self._sent_msg = await self._sent_msg.reply_document(
+                self._sent_msg = await current_client.send_document(
+                    chat_id=self._sent_msg.chat.id,
+                    reply_to_message_id=self._sent_msg.id,
                     document=self._up_path,
                     thumb=thumb,
                     caption=cap_mono,
@@ -425,7 +438,9 @@ class TelegramUploader:
                     return
                 if thumb == "none":
                     thumb = None
-                self._sent_msg = await self._sent_msg.reply_video(
+                self._sent_msg = await current_client.send_video(
+                    chat_id=self._sent_msg.chat.id,
+                    reply_to_message_id=self._sent_msg.id,
                     video=self._up_path,
                     caption=cap_mono,
                     duration=duration,
@@ -443,7 +458,9 @@ class TelegramUploader:
                     return
                 if thumb == "none":
                     thumb = None
-                self._sent_msg = await self._sent_msg.reply_audio(
+                self._sent_msg = await current_client.send_audio(
+                    chat_id=self._sent_msg.chat.id,
+                    reply_to_message_id=self._sent_msg.id,
                     audio=self._up_path,
                     caption=cap_mono,
                     duration=duration,
@@ -457,7 +474,9 @@ class TelegramUploader:
                 key = "photos"
                 if self._listener.is_cancelled:
                     return
-                self._sent_msg = await self._sent_msg.reply_photo(
+                self._sent_msg = await current_client.send_photo(
+                    chat_id=self._sent_msg.chat.id,
+                    reply_to_message_id=self._sent_msg.id,
                     photo=self._up_path,
                     caption=cap_mono,
                     disable_notification=True,

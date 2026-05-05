@@ -11,6 +11,7 @@ class Config:
     BASE_URL = ""
     BASE_URL_PORT = 80
     BOT_TOKEN = ""
+    EXTRA_BOT_TOKENS = []
     CMD_SUFFIX = ""
     CLONE_DUMP_CHATS = ""
     DATABASE_URL = ""
@@ -97,6 +98,10 @@ class Config:
 
             if not value:
                 return expected_type()
+
+            if key == "EXTRA_BOT_TOKENS":
+                return [t.strip() for t in value.split(",") if t.strip()]
+
 
             try:
                 evaluated = literal_eval(value)
