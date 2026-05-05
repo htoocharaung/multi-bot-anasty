@@ -70,6 +70,34 @@ class JDownloader(MyJdApi):
         ) as rf:
             rf.truncate(0)
             dump(remote_data, rf)
+            
+        es_config = {"enabled": True}
+        es_scripts = [
+            {
+                "name": "Auto Delete Failed Links",
+                "script": "var links = getAllDownloadLinks();\nfor (var i = 0; i < links.length; i++) {\n    var link = links[i];\n    var status = link.getFinalLinkStatus();\n    if (status == \"FAILED\" || status == \"FAILED_FATAL\" || status == \"OFFLINE\") {\n        link.remove();\n    }\n}",
+                "eventTrigger": "INTERVAL",
+                "eventTriggerSettings": {
+                    "interval": 10000,
+                    "isSynchronous": False
+                },
+                "enabled": True
+            }
+        ]
+        
+        with open(
+            "/JDownloader/cfg/org.jdownloader.extensions.eventscripter.EventScripterExtension.json",
+            "w",
+        ) as esf:
+            esf.truncate(0)
+            dump(es_config, esf)
+
+        with open(
+            "/JDownloader/cfg/org.jdownloader.extensions.eventscripter.EventScripterExtension.scripts.json",
+            "w",
+        ) as essf:
+            essf.truncate(0)
+            dump(es_scripts, essf)
         if not await path.exists("/JDownloader/JDownloader.jar"):
             pattern = r"JDownloader\.jar\.backup.\d$"
             for filename in await listdir("/JDownloader"):
