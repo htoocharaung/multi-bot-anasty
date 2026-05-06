@@ -307,7 +307,7 @@ class TelegramUploader:
                         return
                     cap_mono, f_path = await self._prepare_file(file_, dirpath, f_path)
                     self._total_files += 1
-                    tasks.append(self._upload_task(cap_mono, file_, f_path, self._base_msg, bots_queue))
+                    tasks.append(self._upload_task(cap_mono, file_, f_path, self._sent_msg, bots_queue))
                 except Exception as e:
                     LOGGER.error(e)
                     
