@@ -9,6 +9,7 @@ from .gd_count import count_node
 from .gd_delete import delete_file
 from .gd_search import gdrive_search, select_type
 from .help import arg_usage, bot_help
+from .jd_clear import clear_jd_queue
 from .mirror_leech import (
     mirror,
     leech,
@@ -91,4 +92,5 @@ __all__ = [
     "ytdl_leech",
     "gallery_dl",
     "gallery_dl_leech",
+    "clear_jd_queue",
 ]

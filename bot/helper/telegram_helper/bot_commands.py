@@ -13,6 +13,7 @@ class BotCommands:
     LeechCommand = [f"leech{i}", f"l{i}"]
     QbLeechCommand = [f"qbleech{i}", f"ql{i}"]
     JdLeechCommand = [f"jdleech{i}", f"jl{i}"]
+    JdClearCommand = [f"jdclear{i}", f"jc{i}"]
     YtdlLeechCommand = [f"ytdlleech{i}", f"yl{i}"]
     GallerydlLeechCommand = [f"gallerydlleech{i}", f"gdlleech{i}"]
     NzbLeechCommand = [f"nzbleech{i}", f"nl{i}"]

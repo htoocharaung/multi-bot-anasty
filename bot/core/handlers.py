@@ -189,6 +189,13 @@ def add_handlers():
     )
     TgClient.bot.add_handler(
         MessageHandler(
+            clear_jd_queue,
+            filters=command(BotCommands.JdClearCommand, case_sensitive=True)
+            & CustomFilters.authorized,
+        )
+    )
+    TgClient.bot.add_handler(
+        MessageHandler(
             nzb_leech,
             filters=command(BotCommands.NzbLeechCommand, case_sensitive=True)
             & CustomFilters.authorized,
