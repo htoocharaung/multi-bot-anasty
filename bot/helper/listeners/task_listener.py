@@ -47,6 +47,7 @@ from ..telegram_helper.message_utils import (
     delete_status,
     update_status_message,
 )
+from ..ext_utils.webhook_helper import send_webhook
 
 
 class TaskListener(TaskConfig):
@@ -334,6 +335,7 @@ class TaskListener(TaskConfig):
             await database.rm_complete_task(self.message.link)
         msg = f"<b>Name: </b><code>{escape(self.name)}</code>\n\n<b>Size: </b>{get_readable_file_size(self.size)}"
         LOGGER.info(f"Task Done: {self.name}")
+        await send_webhook("TaskCompleted", {"name": self.name, "size": self.size, "message": "Upload completed successfully."})
         if self.is_leech:
             msg += f"\n<b>Total Files: </b>{folders}"
             if mime_type != 0:

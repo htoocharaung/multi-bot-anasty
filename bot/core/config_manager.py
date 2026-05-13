@@ -72,6 +72,7 @@ class Config:
     USER_TRANSMISSION = False
     USE_SERVICE_ACCOUNTS = False
     WEB_PINCODE = False
+    WEBHOOK_URL = ""
     YT_DLP_OPTIONS = {}
 
     @classmethod

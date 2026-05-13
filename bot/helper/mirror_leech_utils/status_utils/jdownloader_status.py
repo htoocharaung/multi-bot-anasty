@@ -7,6 +7,7 @@ from ...ext_utils.status_utils import (
     get_readable_file_size,
     get_readable_time,
 )
+from ...ext_utils.webhook_helper import send_webhook
 
 
 def _get_combined_info(result, old_info):
@@ -73,6 +74,7 @@ class JDownloaderStatus:
         self._gid = gid
         self._info = {}
         self.tool = "jdownloader"
+        self._zero_speed_since = None
 
     async def _update(self):
         self._info = await get_download(self._gid, self._info)
@@ -104,6 +106,25 @@ class JDownloaderStatus:
 
     async def status(self):
         await self._update()
+        
+        speed = self._info.get("speed", 0)
+        bytesLoaded = self._info.get("bytesLoaded", 0)
+        bytesTotal = self._info.get("bytesTotal", 0)
+        
+        if bytesTotal > 0:
+            progress_pct = (bytesLoaded / bytesTotal) * 100
+            if progress_pct > 80:
+                if speed == 0:
+                    if self._zero_speed_since is None:
+                        self._zero_speed_since = time()
+                    elif (time() - self._zero_speed_since) > 300:
+                        await send_webhook("JDownloaderStuck", {"name": self.name(), "progress": progress_pct})
+                        self._zero_speed_since = time()
+                else:
+                    self._zero_speed_since = None
+        else:
+            self._zero_speed_since = None
+            
         state = self._info.get("status", "jdlimit").capitalize()
         if len(state) == 0:
             if self._info.get("bytesLoaded", 0) == 0:
