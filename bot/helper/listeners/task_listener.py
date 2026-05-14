@@ -1,6 +1,7 @@
 from aiofiles.os import path as aiopath, listdir, remove
 from asyncio import sleep, gather
 from html import escape
+import requests
 from requests import utils as rutils
 
 from ... import (
@@ -62,6 +63,28 @@ class TaskListener(TaskConfig):
             await gather(TorrentManager.aria2.purgeDownloadResult(), delete_status())
         except:
             pass
+
+    async def send_webhook(self, status, error=None):
+        if not Config.WEBHOOK_URL:
+            return
+        
+        payload = {
+            "task_name": self.name,
+            "status": status,
+            "size": get_readable_file_size(self.size) if hasattr(self, "size") else "0B",
+            "tag": self.tag,
+            "message_link": self.message.link if hasattr(self, "message") else ""
+        }
+        if error:
+            payload["error"] = error
+            
+        def _post():
+            try:
+                requests.post(Config.WEBHOOK_URL, json=payload, timeout=10)
+            except Exception as e:
+                LOGGER.error(f"Webhook error: {e}")
+                
+        await sync_to_async(_post)
 
     def clear(self):
         self.subname = ""
@@ -414,6 +437,7 @@ class TaskListener(TaskConfig):
                 non_queued_up.remove(self.mid)
 
         await start_from_queued()
+        await self.send_webhook("completed")
 
     async def on_download_error(self, error, button=None):
         async with task_dict_lock:
@@ -454,6 +478,7 @@ class TaskListener(TaskConfig):
             await clean_download(self.up_dir)
         if self.thumb and await aiopath.exists(self.thumb):
             await remove(self.thumb)
+        await self.send_webhook("failed", str(error))
 
     async def on_upload_error(self, error):
         async with task_dict_lock:
@@ -492,3 +517,4 @@ class TaskListener(TaskConfig):
             await clean_download(self.up_dir)
         if self.thumb and await aiopath.exists(self.thumb):
             await remove(self.thumb)
+        await self.send_webhook("failed", str(error))
