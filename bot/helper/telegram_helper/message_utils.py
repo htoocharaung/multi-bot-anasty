@@ -14,7 +14,7 @@ from ..ext_utils.status_utils import get_readable_message
 async def send_message(message, text, buttons=None, block=True):
     try:
         return await message.reply(
-            text=text,
+            text=str(text),
             disable_notification=True,
             reply_markup=buttons,
         )

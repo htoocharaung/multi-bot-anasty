@@ -486,7 +486,7 @@ async def _unlock_alldebrid_link(link: str) -> dict[str, Any]:
         "POST",
         f"{_API_BASE_V4}/link/unlock",
         params=params,
-        data=[("link", link)],
+        data={"link": link},
     )
 
 
@@ -652,7 +652,12 @@ async def alldebrid_resolve_magnet(
 async def alldebrid_resolve_torrent(
     torrent_bytes: bytes,
     filename: str,
-    **kwargs,
+    *,
+    progress_callback: Optional[Callable[[dict[str, Any]], Awaitable[None]]] = None,
+    is_cancelled: Optional[Callable[[], bool]] = None,
+    poll_interval: float = _MAGNET_POLL_INTERVAL_S,
+    no_seed_timeout: float = _MAGNET_NO_SEED_TIMEOUT_S,
+    max_duration: float = _MAGNET_MAX_DURATION_S,
 ) -> dict[str, Any]:
     """Same flow as :func:`alldebrid_resolve_magnet` but for ``.torrent`` bytes."""
     _ensure_api_key()
