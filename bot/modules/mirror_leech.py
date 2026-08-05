@@ -24,6 +24,9 @@ from ..helper.listeners.task_listener import TaskListener
 from ..helper.mirror_leech_utils.download_utils.aria2_download import (
     add_aria2_download,
 )
+from ..helper.mirror_leech_utils.status_utils.alldebrid_status import (
+    AllDebridStatus,
+)
 from ..helper.mirror_leech_utils.download_utils.alldebrid_resolver import (
     alldebrid_resolve,
     alldebrid_resolve_magnet,
@@ -314,12 +317,20 @@ class Mirror(TaskListener):
         if self.is_alldebrid and (
             is_magnet(self.link) or self.link.endswith(".torrent")
         ):
+            ad_status = AllDebridStatus(self)
+            async with task_dict_lock:
+                task_dict[self.mid] = ad_status
+
+            async def progress_cb(status_dict):
+                ad_status.update(status_dict)
+
             try:
                 if is_magnet(self.link):
                     LOGGER.info("AllDebrid magnet route")
                     resolved = await alldebrid_resolve_magnet(
                         self.link,
                         is_cancelled=lambda: self.is_cancelled,
+                        progress_callback=progress_cb,
                     )
                 else:
                     LOGGER.info(f"AllDebrid torrent file route: {self.link}")
@@ -329,17 +340,24 @@ class Mirror(TaskListener):
                         torrent_bytes,
                         ospath_basename(self.link),
                         is_cancelled=lambda: self.is_cancelled,
+                        progress_callback=progress_cb,
                     )
             except DirectDownloadLinkException as e:
                 msg = str(e)
                 LOGGER.info(msg)
                 if msg.startswith("ERROR:"):
                     await send_message(self.message, msg)
+                    async with task_dict_lock:
+                        if self.mid in task_dict:
+                            del task_dict[self.mid]
                     await self.remove_from_same_dir()
                     return
                 resolved = None
             except Exception as e:
                 await send_message(self.message, e)
+                async with task_dict_lock:
+                    if self.mid in task_dict:
+                        del task_dict[self.mid]
                 await self.remove_from_same_dir()
                 return
             if isinstance(resolved, dict):
