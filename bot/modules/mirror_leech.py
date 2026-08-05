@@ -48,7 +48,11 @@ from ..helper.mirror_leech_utils.download_utils.rclone_download import (
 from ..helper.mirror_leech_utils.download_utils.telegram_download import (
     TelegramDownloadHelper,
 )
-from ..helper.telegram_helper.message_utils import send_message, get_tg_link_message
+from ..helper.telegram_helper.message_utils import (
+    send_message,
+    get_tg_link_message,
+    send_status_message,
+)
 
 
 class Mirror(TaskListener):
@@ -320,6 +324,8 @@ class Mirror(TaskListener):
             ad_status = AllDebridStatus(self)
             async with task_dict_lock:
                 task_dict[self.mid] = ad_status
+            
+            await send_status_message(self.message)
 
             async def progress_cb(status_dict):
                 ad_status.update(status_dict)
@@ -354,7 +360,7 @@ class Mirror(TaskListener):
                     return
                 resolved = None
             except Exception as e:
-                await send_message(self.message, e)
+                await send_message(self.message, str(e))
                 async with task_dict_lock:
                     if self.mid in task_dict:
                         del task_dict[self.mid]
