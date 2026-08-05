@@ -445,6 +445,17 @@ class TaskListener(TaskConfig):
                 del task_dict[self.mid]
             count = len(task_dict)
         await self.remove_from_same_dir()
+        magnet_id = getattr(self, "_alldebrid_magnet_id", 0) or 0
+        if magnet_id:
+            try:
+                from ..mirror_leech_utils.download_utils.alldebrid_resolver import (
+                    delete_magnet,
+                )
+
+                await delete_magnet(magnet_id)
+            except Exception:
+                pass
+            self._alldebrid_magnet_id = 0
         msg = f"{self.tag} Download: {escape(str(error))}"
         await send_message(self.message, msg, button)
         if count == 0:

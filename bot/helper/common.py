@@ -94,6 +94,8 @@ class TaskConfig:
         self.is_clone = False
         self.is_ytdlp = False
         self.is_gallerydl = False
+        self.is_alldebrid = False
+        self._alldebrid_magnet_id = 0
         self.equal_splits = False
         self.user_transmission = False
         self.hybrid_leech = False

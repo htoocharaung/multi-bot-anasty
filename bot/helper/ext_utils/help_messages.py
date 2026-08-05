@@ -359,6 +359,7 @@ MIRROR_HELP_DICT = {
     "Thumb-Layout": thumbnail_layout,
     "Leech-Type": leech_as,
     "FFmpeg-Cmds": ffmpeg_cmds,
+    "AllDebrid": "<b>AllDebrid</b>: -ad\n\nResolve filehost links, magnet URIs, and .torrent files via AllDebrid before download.\nRequires ALLDEBRID_API_KEY in config.",
 }
 
 CLONE_HELP_DICT = {
