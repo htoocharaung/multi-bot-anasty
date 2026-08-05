@@ -15,7 +15,7 @@ class AllDebridStatus:
         self._status = status
 
     def gid(self):
-        return self._gid
+        return str(self.listener.mid)
 
     def progress_raw(self):
         try:
